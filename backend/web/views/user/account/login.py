@@ -17,7 +17,7 @@ class LoginView(APIView):
                 })
             user = authenticate(username=username, password=password)  # 验证用户提供的用户名和密码是否匹配
             if user:  # 不为空，用户名密码匹配
-                user_profile = UserProfile.objects.get(username=username)
+                user_profile = UserProfile.objects.get(user=user)
                 refresh = RefreshToken.for_user(user)  # 生成refresh_token
                 response = Response({
                     'result': 'success',
@@ -40,6 +40,8 @@ class LoginView(APIView):
                 'result': '用户名或密码错误'
             })
         except:
+            import traceback
+            print(traceback.format_exc())  # 输出错误信息
             return Response({
                 'result': '系统异常，请稍后重试'
             })
