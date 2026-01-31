@@ -152,7 +152,31 @@ SIMPLE_JWT = {
 
 # 配置跨域
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False  # 生产环境建议设为False
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "http://localhost:5173",  # 开发环境Vite端口
+    "http://127.0.0.1:5173",  # 开发环境Vite端口(IP形式)
+    "http://localhost:8000",  # 生产环境打包后访问端口
+    "http://127.0.0.1:8000",  # 生产环境打包后访问端口(IP形式)
+]
+
+# 允许的HTTP方法
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+# 允许的HTTP头部
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]

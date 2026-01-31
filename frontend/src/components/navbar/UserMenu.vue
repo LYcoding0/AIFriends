@@ -44,7 +44,7 @@ async function handleLogout() {
               <img :src="user.photo" alt="">
             </div>
           </div>
-          <span class="text-base font-bold line-clamp-1">{{ user.username }}</span>
+          <span class="text-base font-bold line-clamp-1 break-all">{{ user.username }}</span>
         </RouterLink>
       </li>
       <li>
@@ -62,7 +62,7 @@ async function handleLogout() {
       </li>
       <li></li>
       <li>
-        <a @click="closeMenu" class="text-sm font-bold py-3">
+        <a @click="handleLogout" class="text-sm font-bold py-3">
           <UserLogoutIcon/>
           退出登录
         </a>
