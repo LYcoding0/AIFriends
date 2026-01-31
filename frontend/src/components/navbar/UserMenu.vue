@@ -3,12 +3,29 @@ import {useUserStore} from "@/stores/user.js";
 import UserSpaceIcon from "@/components/navbar/icons/UserSpaceIcon.vue";
 import UserLogoutIcon from "@/components/navbar/icons/UserLogoutIcon.vue";
 import UserProfileIcon from "@/components/navbar/icons/UserProfileIcon.vue";
+import {useRouter} from "vue-router";
+import api from "@/js/http/api.js";
 
 const user = useUserStore()
+const router = useRouter()
 
 function closeMenu() {
   const element = document.activeElement
   if (element && element instanceof HTMLElement) element.blur()
+}
+
+async function handleLogout() {
+  try {
+    const res = await api.post('/api/user/account/logout/')
+    if (res.data.result === 'success') {
+      user.logout()
+      await router.push({
+        name: 'homepage-index'
+      })
+    }
+  } catch (err) {
+    console.log(err)
+  }
 }
 </script>
 
@@ -31,7 +48,8 @@ function closeMenu() {
         </RouterLink>
       </li>
       <li>
-        <RouterLink @click="closeMenu" :to="{name: 'user-space-index', params: {user_id: user.id}}" class="text-sm font-bold py-3">
+        <RouterLink @click="closeMenu" :to="{name: 'user-space-index', params: {user_id: user.id}}"
+                    class="text-sm font-bold py-3">
           <UserSpaceIcon/>
           个人空间
         </RouterLink>
