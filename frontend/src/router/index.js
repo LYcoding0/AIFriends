@@ -102,13 +102,12 @@ router.beforeEach((to, from) => {
     // 权限验证逻辑：
     // 1. 检查目标路由是否需要登录权限 (to.meta.needLogin)
     // 2. 确认用户信息已加载完成 (user.hasPulledUserInfo)
-    // 3. 验证用户是否未登录 (!user.isLogin())
     // 只有同时满足这三个条件时才重定向到登录页
+    // 3. 验证用户是否未登录 (!user.isLogin())
     if (to.meta.needLogin && user.hasPulledUserInfo && !user.isLogin()) {
         return {name: 'user-account-login-index'}
     }
-    
-    // 允许正常导航
+
     return true
 })
 

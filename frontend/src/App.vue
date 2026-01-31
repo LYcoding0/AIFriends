@@ -23,7 +23,6 @@ onMounted(async () => {
       user.setUserInfo(data)
     }
   } catch (err) {
-    // 请求失败，输出错误信息
     console.log(err)
   } finally {
     // 标记用户信息拉取完成
