@@ -19,6 +19,13 @@
 - **SimpleJWT** - JWT认证方案
 - **SQLite** - 默认数据库
 
+### 教程
+- [vue3](https://cn.vuejs.org/guide/quick-start)
+- [TailWind CSS](https://tailwindcss.com/docs/installation/using-vite)
+- [daisyUI](https://daisyui.com/components/)
+- [Croppie](https://foliotek.github.io/Croppie/)
+- [python教程](https://docs.python.org/zh-cn/3/tutorial/index.html)
+
 ## 📁 项目结构
 
 ```

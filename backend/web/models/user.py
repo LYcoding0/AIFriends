@@ -13,7 +13,7 @@ def photo_upload_to(instance, filename):  # 上传图片
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    photo = models.ImageField(default='user/photos/default.jpg', upload_to='profile_pics')  # 默认从media取图片
+    photo = models.ImageField(default='user/photos/default.jpg', upload_to=photo_upload_to)  # 默认从media取图片
     profile = models.TextField(default='感谢您的关注', max_length=500)
     created_time = models.DateTimeField(default=now)
     updated_time = models.DateTimeField(default=now)
