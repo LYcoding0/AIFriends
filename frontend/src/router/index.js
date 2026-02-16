@@ -8,6 +8,7 @@ import RegisterIndex from "@/views/user/account/RegisterIndex.vue";
 import SpaceIndex from "@/views/user/space/SpaceIndex.vue";
 import ProfileIndex from "@/views/user/profile/ProfileIndex.vue";
 import {useUserStore} from "@/stores/user.js";
+import UpdateCharacter from "@/views/create/character/UpdateCharacter.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,6 +34,14 @@ const router = createRouter({
             path: '/create/',
             name: 'create-index',
             component: CreateIndex,
+            meta: {
+                needLogin: true
+            }
+        },
+        {
+            path: '/create/character/update/:character_id/',
+            name: 'update-character',
+            component: UpdateCharacter,
             meta: {
                 needLogin: true
             }
@@ -98,7 +107,7 @@ const router = createRouter({
  */
 router.beforeEach((to, from) => {
     const user = useUserStore()
-    
+
     // 权限验证逻辑：
     // 1. 检查目标路由是否需要登录权限 (to.meta.needLogin)
     // 2. 确认用户信息已加载完成 (user.hasPulledUserInfo)
