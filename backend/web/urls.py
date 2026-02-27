@@ -31,11 +31,11 @@ urlpatterns = [
     path('api/create/character/get_single/', GetSingleCharacterView.as_view()),
 
     path('api/create/character/get_list/', GetListCharacterView.as_view()),
-    path('api/homepage/index/',HomepageIndexView.as_view()),
+    path('api/homepage/index/', HomepageIndexView.as_view()),
 
-    path('api/friend/get_or_create/',GetOrCreateFriendView.as_view()),
-    path('api/friend/remove/',RemoveFriendView.as_view()),
-    path('api/friend/get_list/',GetListFriendView.as_view()),
+    path('api/friend/get_or_create/', GetOrCreateFriendView.as_view()),
+    path('api/friend/remove/', RemoveFriendView.as_view()),
+    path('api/friend/get_list/', GetListFriendView.as_view()),
 
     path('', index),
 

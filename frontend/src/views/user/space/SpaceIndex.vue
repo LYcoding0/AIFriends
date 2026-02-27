@@ -74,7 +74,7 @@ onMounted(async () => {
   observer = new IntersectionObserver(
       entries => {
         entries.forEach(entry => {
-          if (entry().isIntersecting) {
+          if (entry.isIntersecting) {
             loadMore()
           }
         })
