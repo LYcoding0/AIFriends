@@ -11,7 +11,7 @@ class ChatGraph:
     @staticmethod
     def create_app():
         llm = ChatOpenAI(
-            model='glm-5',
+            model='glm-4.7',
             openai_api_key=os.getenv('API_KEY'),
             openai_api_base=os.getenv('API_BASE'),
             streaming=True,  # 流式输出

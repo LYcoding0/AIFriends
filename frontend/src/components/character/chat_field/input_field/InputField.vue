@@ -9,6 +9,7 @@ import streamApi from "@/js/http/streamApi.js";
 const inputRef = useTemplateRef('input-ref')
 const message = ref('')
 const props = defineProps(['friendId'])
+const emit = defineEmits(['pushBackMessage', 'addToLastMessage'])
 let isProcessing = false // 是否正在发送恢回复消息中
 
 function focus() {
@@ -22,6 +23,10 @@ async function handleSend() {
   const content = message.value.trim()
   if (!content) return
   message.value = ''
+
+  emit('pushBackMessage', {role: 'user', content: content, id: crypto.randomUUID()})
+  emit('pushBackMessage', {role: 'ai', content: '', id: crypto.randomUUID()})
+
   // try {
   //   const res = await api.post('/api/friend/message/chat/', {
   //     friend_id: props.friendId,
@@ -42,7 +47,8 @@ async function handleSend() {
         if (isDone) {
           isProcessing = false
         } else if (data.content) {
-          console.log(data.content)
+          // console.log(data.content)
+          emit('addToLastMessage', data.content)
         }
       },
       onerror(err) {
