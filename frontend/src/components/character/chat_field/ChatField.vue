@@ -58,8 +58,8 @@ defineExpose({
         ×
       </button>
       <ChatHistory ref="chat-history-ref" v-if="friend" :friendId="friend.id" :history="history"
-                   :character="friend.character" @pushFrontMessage="handlePushBackMessage"/>
-      <InputField v-if="friend" :friendId="friend.id" ref="input-ref" @pushFrontMessage="handlePushFrontMessage"
+                   :character="friend.character" @pushFrontMessage="handlePushFrontMessage"/>
+      <InputField v-if="friend" :friendId="friend.id" ref="input-ref" @pushBackMessage="handlePushBackMessage"
                   @addToLastMessage="handleAddToLastMessage"/>
       <CharacterPhotoField v-if="friend" :character="friend.character"/>
     </div>
