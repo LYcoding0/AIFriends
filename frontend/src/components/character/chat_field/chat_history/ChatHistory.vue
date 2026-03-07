@@ -4,9 +4,9 @@ import {nextTick, onBeforeUnmount, onMounted, useTemplateRef} from "vue";
 import api from "@/js/http/api.js";
 
 const props = defineProps(['history', 'friendId', 'character'])
+const emit = defineEmits(['pushFrontMessage'])
 const scrollRef = useTemplateRef('scroll-ref')
 const sentinelRef = useTemplateRef('sentinel-ref')
-const emit = defineEmits(['pushFrontMessage'])
 let isLoading = false
 let hasMessages = true
 let lastMessageId = 0
@@ -36,35 +36,33 @@ async function loadMore() {
       newMessages = data.messages
     }
   } catch (err) {
-    console.log(err)
   } finally {
     isLoading = false
+
     if (newMessages.length === 0) {
       hasMessages = false
     } else {
-      const oldHeight = scrollRef.value.scrollHeight // 获取当前滚动条高度
-      const oldTop = scrollRef.value.scrollTop // 获取当前滚动条位置
+      const oldHeight = scrollRef.value.scrollHeight // 获取当前滚动高度
+      const oldTop = scrollRef.value.scrollTop // 获取当前滚动位置
 
-      // 反转消息数组，因为后端返回的是倒序（最新的在前）
-      // 但我们需要从旧到新添加到前面，这样显示顺序才正确
-      const reversedMessages = [...newMessages].reverse()
-      
-      for (const m of reversedMessages) {
-        emit('pushFrontMessage', {
-          role: 'user',
-          content: m.user_message,
-          id: crypto.randomUUID(),
-        })
+      for (const m of newMessages) {
         emit('pushFrontMessage', {
           role: 'ai',
           content: m.output,
           id: crypto.randomUUID(),
         })
+        emit('pushFrontMessage', {
+          role: 'user',
+          content: m.user_message,
+          id: crypto.randomUUID(),
+        })
         lastMessageId = m.id
       }
+
       await nextTick()
-      const newHeight = scrollRef.value.scrollHeight // 获取新的滚动条高度
-      scrollRef.value.scrollTop = oldTop + newHeight - oldHeight
+
+      const newHeight = scrollRef.value.scrollHeight
+      scrollRef.value.scrollTop = oldTop + newHeight - oldHeight // 设置新的滚动位置
 
       if (checkSentinelVisible()) {
         await loadMore()
@@ -78,15 +76,16 @@ onMounted(async () => {
   await loadMore()
 
   observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            loadMore()
-          }
-        })
-      },
-      {root: null, rootMargin: '2px', threshold: 0}
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadMore()
+        }
+      })
+    },
+    {root: null, rootMargin: '2px', threshold: 0}
   )
+
   observer.observe(sentinelRef.value)
 })
 
@@ -107,8 +106,13 @@ defineExpose({
 
 <template>
   <div ref="scroll-ref" class="absolute top-18 left-0 w-90 h-112 overflow-y-scroll no-scrollbar">
-    <div ref="sentinel-ref" class="h-2 bg-red-500"></div>
-    <Message v-for="message in history" :key="message.id" :message="message" :character="character"/>
+    <div ref="sentinel-ref" class="h-2"></div>
+    <Message
+        v-for="message in history"
+        :key="message.id"
+        :message="message"
+        :character="character"
+    />
   </div>
 </template>
 
