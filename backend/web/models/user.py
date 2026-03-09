@@ -15,8 +15,8 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     photo = models.ImageField(default='user/photos/default.jpg', upload_to=photo_upload_to)  # 默认从media取图片
     profile = models.TextField(default='感谢您的关注', max_length=500)
-    created_time = models.DateTimeField(default=now)
-    updated_time = models.DateTimeField(default=now)
+    create_time = models.DateTimeField(default=now)
+    update_time = models.DateTimeField(default=now)
 
     def __str__(self):
-        return f'{self.user.username} - {localtime(self.created_time).strftime("%Y-%m-%d %H:%M:%S")}'
+        return f'{self.user.username} - {localtime(self.create_time).strftime("%Y-%m-%d %H:%M:%S")}'

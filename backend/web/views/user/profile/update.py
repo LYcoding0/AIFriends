@@ -45,7 +45,7 @@ class UpdateProfileView(APIView):
                 user_profile.photo = photo
 
             user_profile.profile = profile
-            user_profile.updated_time = now()
+            user_profile.update_time = now()
             user_profile.save()
             user.username = username
             user.save()

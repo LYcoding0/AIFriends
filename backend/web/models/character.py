@@ -24,8 +24,8 @@ class Character(models.Model):
     photo = models.ImageField(upload_to=photo_upload_to)
     profile = models.TextField(max_length=100000)
     background_image = models.ImageField(upload_to=background_image_upload_to)
-    created_time = models.DateTimeField(default=now)
-    updated_time = models.DateTimeField(default=now)
+    create_time = models.DateTimeField(default=now)
+    update_time = models.DateTimeField(default=now)
 
     def __str__(self):
-        return f"{self.author.user.username} - {self.name} - {localtime(self.created_time).strftime('%Y-%m-%d %H:%M:%S')}"
+        return f"{self.author.user.username} - {self.name} - {localtime(self.create_time).strftime('%Y-%m-%d %H:%M:%S')}"
