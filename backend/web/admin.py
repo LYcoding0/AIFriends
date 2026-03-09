@@ -3,7 +3,7 @@ from django.contrib import admin
 # 先导入模型
 from web.models.user import UserProfile
 from web.models.character import Character
-from web.models.friend import Friend, Message
+from web.models.friend import Friend, Message, SystemPrompt
 
 
 @admin.register(UserProfile)  # 将UserProfile模型注册到Django管理后台
@@ -24,3 +24,7 @@ class FriendAdmin(admin.ModelAdmin):
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     raw_id_fields = ('friend',)
+
+
+# 无外键，直接 注册
+admin.site.register(SystemPrompt)
