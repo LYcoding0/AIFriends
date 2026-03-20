@@ -10,9 +10,10 @@
 
 import axios from "axios"
 import {useUserStore} from "@/stores/user.js";
+import CONFIG_API from "@/js/config/config.js";
 
 // 定义API基础URL
-const BASE_URL = 'http://127.0.0.1:8000'
+const BASE_URL = CONFIG_API.HTTP_URL
 
 // 创建axios实例，配置基础URL和携带凭证
 const api = axios.create({
