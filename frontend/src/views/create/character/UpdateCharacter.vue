@@ -36,17 +36,20 @@ onMounted(async () => {
     if (data.result === 'success') {
       character.value = data.character
       voices.value = data.voices
-      curVoiceId.value = data.character.voice_id
+      curVoiceId.value = data.character.voice_id || data.voices?.[0]?.id || null
+    } else {
+      errorMessage.value = data.result
     }
   } catch (err) {
     console.log(err)
+    errorMessage.value = err?.response?.data?.result || '网络异常，请稍后重试'
   }
 })
 
 async function handleUpdate() {
   const photo = photoRef.value.myPhoto
   const name = nameRef.value.myName?.trim()
-  const voice = voiceRef.value.myVoice
+  const voice = `${voiceRef.value.myVoice ?? ''}`.trim()
   const profile = profileRef.value.myProfile?.trim()
   const backgroundImage = backgroundImageRef.value.myBackgroundImage
 
@@ -88,10 +91,11 @@ async function handleUpdate() {
           }
         })
       } else {
-        errorMessage.value = data.result()
+        errorMessage.value = data.result
       }
     } catch (err) {
       console.log(err)
+      errorMessage.value = err?.response?.data?.result || '网络异常，请稍后重试'
     }
   }
 }
