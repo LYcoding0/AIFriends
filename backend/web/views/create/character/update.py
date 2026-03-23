@@ -16,7 +16,7 @@ class UpdateCharacterView(APIView):
             # character_id字符串类型会自动转为int类型，__user是UserProfile的属性
             character = Character.objects.get(id=character_id, author__user=request.user)
             name = request.data['name'].strip()
-            voice_id = request.data.get('voice_id')
+            voice_id = request.data['voice_id']
             profile = request.data['profile'].strip()
             photo = request.FILES.get('photo', None)
             background_image = request.FILES.get('background_image', None)
