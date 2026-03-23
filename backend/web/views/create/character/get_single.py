@@ -11,7 +11,11 @@ class GetSingleCharacterView(APIView):
     def get(self, request):
         try:
             character_id = request.query_params.get('character_id')
-            character = Character.objects.get(id=character_id, author__user=request.user)
+            character = Character.objects.filter(id=character_id, author__user=request.user).first()
+            if not character:
+                return Response({
+                    'result': '角色不存在或无权限'
+                })
 
             voices_raw = Voice.objects.order_by('id')
             voices = []
@@ -29,11 +33,11 @@ class GetSingleCharacterView(APIView):
                     'profile': character.profile,
                     'photo': character.photo.url,
                     'background_image': character.background_image.url,
-                    'voice_id': character.voice.id,
+                    'voice_id': character.voice.id if character.voice else None,
                 },
                 'voices': voices,
             })
-        except:
+        except Exception:
             return Response({
                 'result': '系统异常，请稍后重试'
             })

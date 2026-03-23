@@ -12,22 +12,40 @@ class UpdateCharacterView(APIView):
 
     def post(self, request):
         try:
-            character_id = request.data['character_id']
-            # character_id字符串类型会自动转为int类型，__user是UserProfile的属性
-            character = Character.objects.get(id=character_id, author__user=request.user)
-            name = request.data['name'].strip()
-            voice_id = request.data['voice_id']
-            profile = request.data['profile'].strip()
+            character_id = request.data.get('character_id')
+            name = request.data.get('name', '').strip()
+            voice_id = request.data.get('voice_id')
+            profile = request.data.get('profile', '').strip()[:100000]
             photo = request.FILES.get('photo', None)
             background_image = request.FILES.get('background_image', None)
 
+            if not character_id:
+                return Response({
+                    'result': '角色不存在'
+                })
             if not name:
                 return Response({
                     'result': '请输入名称'
                 })
+            if not voice_id:
+                return Response({
+                    'result': '请选择角色音色'
+                })
             if not profile:
                 return Response({
                     'result': '请输入简介'
+                })
+
+            character = Character.objects.filter(id=character_id, author__user=request.user).first()
+            if not character:
+                return Response({
+                    'result': '角色不存在或无权限'
+                })
+
+            voice = Voice.objects.filter(id=voice_id).first()
+            if not voice:
+                return Response({
+                    'result': '音色不存在'
                 })
 
             if photo:
@@ -38,18 +56,16 @@ class UpdateCharacterView(APIView):
                 remove_old_photo(character.background_image)
                 character.background_image = background_image
 
-            voice = Voice.objects.get(id=voice_id)
             character.voice = voice
             character.name = name
             character.profile = profile
             character.update_time = now()
-
             character.save()
+
             return Response({
                 'result': 'success'
             })
-
-        except:
+        except Exception:
             return Response({
                 'result': '系统异常，请稍后重试'
             })
