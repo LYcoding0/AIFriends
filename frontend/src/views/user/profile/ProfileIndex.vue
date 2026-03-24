@@ -51,15 +51,15 @@ async function handleUpdate() {
 
 <template>
   <div class="flex justify-center">
-    <div class="card w-120 bg-base-200 shadow-sm mt-16">
+    <div class="editor-card card w-120 mt-16">
       <div class="card-body">
-        <h3 class="text-lg font-bold mt-4">编辑资料</h3>
+        <h3 class="editor-title text-lg mt-4">编辑资料</h3>
         <Photo ref="photo-ref" :photo="user.photo"/>
         <Username ref="username-ref" :username="user.username"/>
         <Profile ref="profile-ref" :profile="user.profile"/>
         <p v-if="errorMassage" class="text-sm text-red-500">{{ errorMassage }}</p>
         <div class="flex justify-center">
-          <button @click="handleUpdate" class="btn btn-neutral w-60 mt-2">更新</button>
+          <button @click="handleUpdate" class="editor-submit btn w-60 mt-2">更新</button>
         </div>
       </div>
     </div>

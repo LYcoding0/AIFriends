@@ -64,14 +64,16 @@ defineExpose({
 <template>
   <div class="flex justify-center">
     <div class="avatar relative">
-      <div v-if="myPhoto" class="w-28 rounded-full">
+      <div v-if="myPhoto" class="upload-photo-frame w-28 rounded-full">
         <img :src="myPhoto" alt="">
       </div>
-      <div v-else class="w-28 h-28 rounded-full bg-base-200"></div>
-      <div @click="fileInputRef.click()"
-           class="w-28 h-28 rounded-full bg-black/20 absolute left-0 top-0 flex justify-center items-center cursor-pointer">
-        <CameraIcon/>
-      </div>
+      <div v-else class="upload-photo-empty w-28 h-28 rounded-full"></div>
+      <button type="button" @click="fileInputRef.click()"
+              class="upload-photo-trigger absolute left-0 top-0 flex h-28 w-28 items-center justify-center rounded-full">
+        <span class="upload-photo-icon">
+          <CameraIcon/>
+        </span>
+      </button>
     </div>
   </div>
 
@@ -92,5 +94,46 @@ defineExpose({
 </template>
 
 <style scoped>
+.upload-photo-frame,
+.upload-photo-empty {
+  overflow: hidden;
+  border: 1px solid rgba(224, 211, 194, 0.96);
+  box-shadow: 0 18px 34px -24px rgba(15, 23, 42, 0.22);
+}
 
+.upload-photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-photo-empty {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), transparent 38%),
+    linear-gradient(180deg, #fffdfa 0%, #f8efe4 100%);
+}
+
+.upload-photo-trigger {
+  color-scheme: only light;
+  forced-color-adjust: none;
+  color: #43516b;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(23, 32, 51, 0.06));
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.upload-photo-trigger:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(23, 32, 51, 0.1));
+}
+
+.upload-photo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.15rem;
+  height: 3.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  background: rgba(255, 252, 247, 0.9);
+  box-shadow: 0 12px 22px -18px rgba(15, 23, 42, 0.48);
+}
 </style>

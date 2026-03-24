@@ -84,7 +84,7 @@ defineExpose({
         <img :src="myPhoto" alt="用户头像">
       </div>
       <div @click="fileInputRef.click()"
-           class="absolute left-0 top-0 w-28 h-28 flex justify-center items-center bg-black/20 rounded-full cursor-pointer">
+           class="absolute left-0 top-0 w-28 h-28 flex justify-center items-center bg-black/20 text-white rounded-full cursor-pointer">
         <CameraIcon/>
       </div>
     </div>

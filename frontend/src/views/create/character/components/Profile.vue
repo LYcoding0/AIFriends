@@ -14,9 +14,9 @@ defineExpose({
 </script>
 
 <template>
-  <fieldset class="fieldset">
-    <label  class="label text-base">角色介绍</label>
-    <textarea v-model="myProfile"  rows="6" class="textarea w-108"></textarea>
+  <fieldset class="editor-fieldset fieldset">
+    <label class="editor-label label text-base">角色介绍</label>
+    <textarea v-model="myProfile" rows="6" class="editor-textarea textarea w-108"></textarea>
   </fieldset>
 
 </template>

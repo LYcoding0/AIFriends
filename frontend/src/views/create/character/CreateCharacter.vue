@@ -87,9 +87,9 @@ async function handleCreate() {
 
 <template>
   <div class="flex justify-center">
-    <div class="card w-120 bg-base-200 shadow-sm mt-16">
+    <div class="editor-card card w-120 mt-16">
       <div class="card-body">
-        <h3 class="text-lg font-bold my-4">创建角色</h3>
+        <h3 class="editor-title text-lg my-4">创建角色</h3>
         <Photo ref="photo-ref"/>
         <Name ref="name-ref"/>
         <Voice ref="voice-ref" :voices="voices" :curVoiceId="curVoiceId"/>
@@ -99,7 +99,7 @@ async function handleCreate() {
         <p v-if="errorMessage" class="text-sm text-red-500">{{ errorMessage }}</p>
 
         <div class="flex justify-center">
-          <button @click="handleCreate" class="btn btn-neutral w-60 mt-2">创建</button>
+          <button @click="handleCreate" class="editor-submit btn w-60 mt-2">创建</button>
         </div>
       </div>
     </div>

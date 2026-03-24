@@ -103,9 +103,9 @@ async function handleUpdate() {
 
 <template>
   <div v-if="character" class="flex justify-center">
-    <div class="card w-120 bg-base-200 shadow-sm mt-16">
+    <div class="editor-card card w-120 mt-16">
       <div class="card-body">
-        <h3 class="text-lg font-bold my-4">更新角色</h3>
+        <h3 class="editor-title text-lg my-4">更新角色</h3>
         <Photo ref="photo-ref" :photo="character.photo"/>
         <Name ref="name-ref" :name="character.name"/>
         <Voice ref="voice-ref" :voices="voices" :curVoiceId="curVoiceId"/>
@@ -115,7 +115,7 @@ async function handleUpdate() {
         <p v-if="errorMessage" class="text-sm text-red-500">{{ errorMessage }}</p>
 
         <div class="flex justify-center">
-          <button @click="handleUpdate" class="btn btn-neutral w-60 mt-2">更新</button>
+          <button @click="handleUpdate" class="editor-submit btn w-60 mt-2">更新</button>
         </div>
       </div>
     </div>

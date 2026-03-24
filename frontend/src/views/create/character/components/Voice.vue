@@ -14,9 +14,9 @@ defineExpose({
 </script>
 
 <template>
-  <fieldset class="fieldset">
-    <label class="label text-base">音色</label>
-    <select v-model="myVoice" class="select">
+  <fieldset class="editor-fieldset fieldset">
+    <label class="editor-label label text-base">音色</label>
+    <select v-model="myVoice" class="editor-select select">
       <option
           v-for="voice in voices"
           :key="voice.id"
