@@ -31,14 +31,14 @@ async function handleLogout() {
 
 <template>
   <div class="dropdown dropdown-end">
-    <div tabindex="0" role="button" class="avatar btn btn-circle w-8 h-8 mr-6">
+    <div tabindex="0" role="button" class="user-menu-trigger avatar btn btn-circle mr-6 h-8 w-8 border border-white/75 bg-white/82 text-slate-800 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.8)]">
       <div class="w-8 rounded-full">
         <img :src="user.photo" alt="">
       </div>
     </div>
-    <ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-1 w-48 p-2 shadow-lg">
+    <ul tabindex="-1" class="user-menu-panel dropdown-content menu z-1 w-56 rounded-[1.5rem] border border-white/75 bg-white/96 p-2 text-slate-800 shadow-[0_30px_70px_-32px_rgba(15,23,42,0.85)] backdrop-blur-xl">
       <li>
-        <RouterLink @click="closeMenu" :to="{name: 'user-space-index', params: {user_id: user.id}}">
+        <RouterLink @click="closeMenu" :to="{name: 'user-space-index', params: {user_id: user.id}}" class="rounded-2xl px-3 py-3 text-slate-900 hover:bg-slate-100/90">
           <div class="avatar">
             <div class="w-10 rounded-full">
               <img :src="user.photo" alt="">
@@ -49,20 +49,20 @@ async function handleLogout() {
       </li>
       <li>
         <RouterLink @click="closeMenu" :to="{name: 'user-space-index', params: {user_id: user.id}}"
-                    class="text-sm font-bold py-3">
+                    class="rounded-2xl py-3 text-sm font-bold text-slate-700 hover:bg-slate-100/90">
           <UserSpaceIcon/>
           个人空间
         </RouterLink>
       </li>
       <li>
-        <RouterLink @click="closeMenu" :to="{name: 'user-profile-index'}" class="text-sm font-bold py-3">
+        <RouterLink @click="closeMenu" :to="{name: 'user-profile-index'}" class="rounded-2xl py-3 text-sm font-bold text-slate-700 hover:bg-slate-100/90">
           <UserProfileIcon/>
           编辑资料
         </RouterLink>
       </li>
       <li></li>
       <li>
-        <a @click="handleLogout" class="text-sm font-bold py-3">
+        <a @click="handleLogout" class="rounded-2xl py-3 text-sm font-bold text-slate-700 hover:bg-slate-100/90">
           <UserLogoutIcon/>
           退出登录
         </a>
@@ -72,5 +72,14 @@ async function handleLogout() {
 </template>
 
 <style scoped>
+.user-menu-trigger,
+.user-menu-panel {
+  color-scheme: only light;
+  forced-color-adjust: none;
+}
 
+.user-menu-panel :deep(svg),
+.user-menu-trigger :deep(svg) {
+  color: currentColor;
+}
 </style>
