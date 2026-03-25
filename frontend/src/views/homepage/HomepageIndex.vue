@@ -96,23 +96,23 @@ onBeforeUnmount(() => {
           <div class="max-w-3xl">
             <h1 class="app-title text-4xl md:text-6xl">{{ sectionTitle }}</h1>
             <p class="mt-4 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-              Discover cinematic AI companions, browse striking character cards, and open a conversation the moment a profile catches your eye.
+              探索更有氛围感的 AI 伙伴，浏览风格鲜明的角色卡片，在被某个角色吸引的瞬间，直接开启一场对话。
             </p>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
             <div class="surface-panel px-4 py-4">
-              <div class="text-[11px] uppercase tracking-[0.28em] text-slate-500">Mode</div>
-              <div class="mt-2 text-lg font-semibold text-slate-900">{{ activeQuery ? 'Search' : 'Explore' }}</div>
+              <div class="text-[11px] uppercase tracking-[0.28em] text-slate-500">模式</div>
+              <div class="mt-2 text-lg font-semibold text-slate-900">{{ activeQuery ? '搜索结果' : '发现角色' }}</div>
             </div>
             <div class="surface-panel px-4 py-4">
-              <div class="text-[11px] uppercase tracking-[0.28em] text-slate-500">Action</div>
-              <div class="mt-2 text-lg font-semibold text-slate-900">Open Chat</div>
+              <div class="text-[11px] uppercase tracking-[0.28em] text-slate-500">操作</div>
+              <div class="mt-2 text-lg font-semibold text-slate-900">开始对话</div>
             </div>
           </div>
         </div>
         <div class="flex flex-wrap gap-3">
           <div v-if="activeQuery" class="glass-pill border-white/80 bg-white/72 text-slate-700"># {{ activeQuery }}</div>
-          <div class="glass-pill border-white/60 bg-white/50 text-slate-500">Tap any character card to start</div>
+          <div class="glass-pill border-white/60 bg-white/50 text-slate-500">点击任意角色卡片即可开始对话</div>
         </div>
       </div>
     </section>
@@ -126,10 +126,10 @@ onBeforeUnmount(() => {
       />
       </div>
       <div ref="sentinel-ref" class="h-2 mt-8 "></div>
-      <div v-if="isLoading" class="mt-5 text-center text-sm font-medium tracking-[0.18em] text-slate-500 uppercase">Loading</div>
-      <div v-else-if="!hasCharacter && characters.length" class="mt-5 text-center text-sm text-slate-500">No more characters</div>
+      <div v-if="isLoading" class="mt-5 text-center text-sm font-medium tracking-[0.18em] text-slate-500 uppercase">加载中</div>
+      <div v-else-if="!hasCharacter && characters.length" class="mt-5 text-center text-sm text-slate-500">没有更多角色了</div>
       <div v-else-if="!isLoading && !characters.length" class="mt-4 rounded-[1.25rem] border border-dashed border-slate-300/70 bg-white/50 px-6 py-10 text-center text-slate-500">
-        No characters found for the current view.
+        当前筛选条件下还没有可显示的角色。
       </div>
       <!--
     <div v-if="isLoading" class="text-gray-500 mt-4">加载中...</div>

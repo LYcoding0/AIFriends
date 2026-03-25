@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import {ref} from "vue";
 import {useUserStore} from "@/stores/user.js";
 import {useRouter} from "vue-router";
@@ -9,7 +9,8 @@ const password = ref('');
 const errorMessage = ref('');
 
 const user = useUserStore();
-const router = useRouter(); //路由跳转
+const router = useRouter();
+
 async function handleLogin() {
   errorMessage.value = '';
   if (!username.value.trim()) {
@@ -23,42 +24,107 @@ async function handleLogin() {
         password: password.value,
       })
       const data = res.data
-      if (data.result === 'success'){
+      if (data.result === 'success') {
         user.setAccessToken(data.access)
         user.setUserInfo(data)
         await router.push({
           name: 'homepage-index',
         })
-      }else {
+      } else {
         errorMessage.value = data.result
       }
     } catch (err) {
       console.log(err)
+      errorMessage.value = '登录失败，请稍后重试'
     }
   }
 }
 </script>
 
 <template>
-  <div class="flex justify-center mt-30">
-    <form @submit.prevent="handleLogin" class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-      <!--      <legend class="fieldset-legend">Login</legend>-->
+  <div class="page-shell px-4 py-8 sm:px-6 lg:px-8">
+    <section class="editor-card relative mx-auto w-full max-w-5xl overflow-hidden">
+      <div class="ambient-orb -left-10 top-10 h-40 w-40 bg-[rgba(255,143,107,0.22)]"></div>
+      <div class="ambient-orb right-0 top-0 h-48 w-48 bg-[rgba(115,184,255,0.16)]"></div>
+      <div class="soft-grid absolute inset-0 opacity-40"></div>
+      <div class="relative z-10 grid gap-8 px-6 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10 lg:py-10">
+        <div class="flex flex-col justify-between gap-8">
+          <div class="max-w-2xl">
+            <div class="glass-pill w-fit">AIFriends</div>
+            <h1 class="app-title mt-6 text-4xl md:text-5xl">欢迎回来</h1>
+            <p class="mt-4 max-w-xl text-sm leading-7 text-slate-600 md:text-base">
+              登录后继续管理你的角色、查看个人空间，并随时开启新的对话。
+            </p>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="surface-panel px-4 py-4">
+              <div class="text-[11px] uppercase tracking-[0.28em] text-slate-500">账户</div>
+              <div class="mt-2 text-lg font-semibold text-slate-900">连接你的创作空间</div>
+            </div>
+            <div class="surface-panel px-4 py-4">
+              <div class="text-[11px] uppercase tracking-[0.28em] text-slate-500">状态</div>
+              <div class="mt-2 text-lg font-semibold text-slate-900">继续上次的对话</div>
+            </div>
+          </div>
+        </div>
 
-      <label class="label">用户名</label>
-      <input v-model="username" type="text" class="input" placeholder="用户名"/>
+        <form
+          @submit.prevent="handleLogin"
+          class="rounded-[1.75rem] border border-white/80 bg-white/70 p-6 shadow-[0_26px_60px_-36px_rgba(15,23,42,0.42)] backdrop-blur-md"
+        >
+          <div class="glass-pill w-fit border-white/75 bg-white/72 text-slate-600">登录</div>
+          <h2 class="editor-title mt-5 text-2xl">进入 AIFriends</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-500">
+            输入你的账号信息，继续浏览角色并发起聊天。
+          </p>
 
-      <label class="label">密码</label>
-      <input v-model="password" type="password" class="input" placeholder="密码"/>
+          <div class="editor-fieldset mt-6 space-y-4">
+            <div>
+              <label class="editor-label mb-2 block">用户名</label>
+              <input
+                v-model="username"
+                type="text"
+                autocomplete="username"
+                class="editor-input input w-full"
+                placeholder="请输入用户名"
+              />
+            </div>
 
-      <p v-if="errorMessage" class="text-sm text-red-500 mt-1">{{ errorMessage }}</p>
+            <div>
+              <label class="editor-label mb-2 block">密码</label>
+              <input
+                v-model="password"
+                type="password"
+                autocomplete="current-password"
+                class="editor-input input w-full"
+                placeholder="请输入密码"
+              />
+            </div>
+          </div>
 
-      <button class="btn btn-neutral mt-4">登录</button>
-      <div class="flex justify-end">
-        <RouterLink :to="{name: 'user-account-register-index'}" class="btn btn-sm btn-ghost text-gray-500">
-          注册
-        </RouterLink>
+          <p
+            v-if="errorMessage"
+            class="mt-4 rounded-2xl border border-red-200/80 bg-red-50/80 px-4 py-3 text-sm text-red-600"
+          >
+            {{ errorMessage }}
+          </p>
+
+          <button class="editor-submit btn mt-6 h-12 w-full rounded-2xl border-0 text-base font-semibold">
+            登录
+          </button>
+
+          <div class="mt-5 flex items-center justify-between gap-4 text-sm text-slate-500">
+            <span>还没有账号？</span>
+            <RouterLink
+              :to="{name: 'user-account-register-index'}"
+              class="rounded-full border border-white/80 bg-white/72 px-4 py-2 font-medium text-slate-700 transition hover:bg-white"
+            >
+              去注册
+            </RouterLink>
+          </div>
+        </form>
       </div>
-    </form>
+    </section>
   </div>
 </template>
 

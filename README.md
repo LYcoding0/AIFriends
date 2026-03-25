@@ -656,13 +656,3 @@ npm run build
 3. 给 `Voice`、`SystemPrompt`、知识库初始化加脚本或 management command。
 4. 把 README 里的环境变量模板同步成 `.env.example`。
 5. 为关键接口补基础测试，尤其是登录、角色更新、聊天链路。
-
-## 18. License
-
-如果你准备开源，建议补充明确的许可证，例如：
-
-- MIT
-- Apache-2.0
-- GPL-3.0
-
-当前仓库尚未看到明确 License 文件。

@@ -7,13 +7,15 @@ import CreateIcon from "@/components/navbar/icons/CreateIcon.vue";
 import SearchIcon from "@/components/navbar/icons/SearchIcon.vue";
 import {useUserStore} from "@/stores/user.js";
 import UserMenu from "@/components/navbar/UserMenu.vue";
-import {ref, watch} from "vue";
+import {computed, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 
 const user = useUserStore();
 const searchQuery = ref('');
 const route = useRoute()
 const router = useRouter()
+const currentYear = new Date().getFullYear()
+const copyrightYears = computed(() => currentYear > 2026 ? `2026-${currentYear}` : '2026')
 
 watch(() => route.query.q, newQ => {
   searchQuery.value = newQ || ''
@@ -32,7 +34,7 @@ function handleSearch() {
 <template>
   <div class="drawer min-h-screen lg:drawer-open">
     <input id="my-drawer-4" type="checkbox" class="drawer-toggle"/>
-    <div class="drawer-content">
+    <div class="drawer-content flex min-h-screen flex-col">
       <nav class="sticky top-0 z-40 px-3 pt-3 sm:px-4 lg:px-6">
         <div class="navbar rounded-[1.75rem] border border-white/60 bg-white/70 px-3 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:px-5">
         <div class="navbar-start gap-2">
@@ -81,11 +83,28 @@ function handleSearch() {
         </div>
       </nav>
 
-      <main class="px-3 pb-12 pt-5 sm:px-4 lg:px-6">
+      <main class="flex-1 px-3 pb-12 pt-5 sm:px-4 lg:px-6">
         <div class="page-shell mx-auto w-full max-w-[1440px]">
           <slot></slot>
         </div>
       </main>
+
+      <footer class="px-3 pb-6 sm:px-4 lg:px-6">
+        <div class="page-shell mx-auto w-full max-w-[1440px]">
+          <div class="rounded-[1.5rem] border border-white/60 bg-white/58 px-5 py-4 text-center text-sm text-slate-500 shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <span>&copy; {{ copyrightYears }} LYcoding 版权所有</span>
+            <span class="mx-2 text-slate-300">|</span>
+            <a
+                href="https://beian.miit.gov.cn"
+                target="_blank"
+                rel="noreferrer"
+                class="font-medium text-slate-600 transition hover:text-slate-900"
+            >
+              苏ICP备2024094389号-2
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
 
     <div class="drawer-side z-30 is-drawer-close:overflow-visible">
