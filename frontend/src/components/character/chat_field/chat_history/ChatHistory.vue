@@ -99,8 +99,23 @@ async function scrollToBottom() {
   scrollRef.value.scrollTop = scrollRef.value.scrollHeight
 }
 
+async function resetHistory(syncEmptyState = false) {
+  isLoading = false
+  hasMessages = true
+  lastMessageId = 0
+
+  if (scrollRef.value) {
+    scrollRef.value.scrollTop = 0
+  }
+
+  if (syncEmptyState) {
+    await loadMore()
+  }
+}
+
 defineExpose({
-  scrollToBottom
+  scrollToBottom,
+  resetHistory,
 })
 </script>
 

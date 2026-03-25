@@ -10,7 +10,9 @@ from web.views.friend.get_list import GetListFriendView
 from web.views.friend.get_or_create import GetOrCreateFriendView
 from web.views.friend.message.asr.asr import ASRView
 from web.views.friend.message.chat.chat import MessageChatView
+from web.views.friend.message.clear_history import ClearHistoryView
 from web.views.friend.message.get_history import GetHistoryView
+from web.views.friend.message.interrupt import InterruptMessageView
 from web.views.friend.remove import RemoveFriendView
 from web.views.homepage.index import HomepageIndexView
 from web.views.index import index
@@ -43,6 +45,8 @@ urlpatterns = [
 
     path('api/friend/message/chat/', MessageChatView.as_view()),
     path('api/friend/message/get_history/', GetHistoryView.as_view()),
+    path('api/friend/message/clear_history/', ClearHistoryView.as_view()),
+    path('api/friend/message/interrupt/', InterruptMessageView.as_view()),
 
     path('api/friend/message/asr/asr/', ASRView.as_view()),
 

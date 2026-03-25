@@ -23,6 +23,7 @@ export default async function streamApi(url, options = {}) {
     const startFetch = async () => {
         return await fetchEventSource(BASE_URL + url, {
             method: options.method || 'POST',
+            signal: options.signal,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${userStore.accessToken}`,

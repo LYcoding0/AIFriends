@@ -1,25 +1,26 @@
-<script setup>
+﻿<script setup>
 
 import SendIcon from "@/components/character/icons/SendIcon.vue";
 import MicIcon from "@/components/character/icons/MicIcon.vue";
 import {onUnmounted, ref, useTemplateRef} from "vue";
+import api from "@/js/http/api.js";
 import streamApi from "@/js/http/streamApi.js";
 import Microphone from "@/components/character/chat_field/input_field/Microphone.vue";
-// import api from "@/js/http/api.js";
 
 const inputRef = useTemplateRef('input-ref')
 const message = ref('')
 const props = defineProps(['friendId'])
-const emit = defineEmits(['pushBackMessage', 'addToLastMessage'])
-// let isProcessing = false // 是否正在发送恢回复消息中
+const emit = defineEmits(['pushBackMessage', 'addToLastMessage', 'processingChange'])
+const isProcessing = ref(false)
 let processId = 0
-const showMic = ref(false) // 是否显示麦克风
+const showMic = ref(false)
+let currentController = null
 
 let mediaSource = null;
 let sourceBuffer = null;
-let audioPlayer = new Audio(); // 全局播放器实例
-let audioQueue = [];           // 待写入 Buffer 的二进制队列
-let isUpdating = false;        // Buffer 是否正在写入
+let audioPlayer = new Audio();
+let audioQueue = [];
+let isUpdating = false;
 
 const initAudioStream = () => {
   audioPlayer.pause();
@@ -41,7 +42,7 @@ const initAudioStream = () => {
     }
   });
 
-  audioPlayer.play().catch(e => console.error("等待用户交互以播放音频"));
+  audioPlayer.play().catch(e => console.error("等待用户交互以播放音频", e));
 };
 
 const processQueue = () => {
@@ -80,7 +81,7 @@ const stopAudio = () => {
   }
 };
 
-const handleAudioChunk = (base64Data) => {  // 将语音片段添加到播放器队列中
+const handleAudioChunk = (base64Data) => {
   try {
     const binaryString = atob(base64Data);
     const len = binaryString.length;
@@ -105,34 +106,47 @@ function focus() {
   inputRef.value.focus()
 }
 
-async function handleSend(event, audio_msg) {
-  let content
-  if (audio_msg) {
-    content = audio_msg.trim()
-  } else {
-    content = message.value.trim()
+function setProcessing(value) {
+  isProcessing.value = value
+  emit('processingChange', value)
+}
+
+function stopCurrentRequest(notifyServer = false) {
+  ++processId
+  if (currentController) {
+    currentController.abort()
+    currentController = null
   }
+  setProcessing(false)
+  stopAudio()
+
+  if (notifyServer && props.friendId) {
+    api.post('/api/friend/message/interrupt/', {
+      friend_id: props.friendId,
+    }).catch(err => {
+      console.log(err)
+    })
+  }
+}
+
+async function handleSend(event, audioMsg) {
+  const content = audioMsg ? audioMsg.trim() : message.value.trim()
 
   if (!content) return
-  // if (isProcessing) return
 
+  if (isProcessing.value) {
+    stopCurrentRequest()
+  }
+
+  setProcessing(true)
   initAudioStream()
 
   const curId = ++processId
+  currentController = new AbortController()
   message.value = ''
 
   emit('pushBackMessage', {role: 'user', content: content, id: crypto.randomUUID()})
   emit('pushBackMessage', {role: 'ai', content: '', id: crypto.randomUUID()})
-
-  // try {
-  //   const res = await api.post('/api/friend/message/chat/', {
-  //     friend_id: props.friendId,
-  //     message: content,
-  //   })
-  //   console.log(res.data)
-  // } catch (err) {
-  //   console.log(err)
-  // }
 
   try {
     await streamApi('/api/friend/message/chat/', {
@@ -140,11 +154,17 @@ async function handleSend(event, audio_msg) {
         friend_id: props.friendId,
         message: content,
       },
+      signal: currentController.signal,
       onmessage(data, isDone) {
         if (curId !== processId) return
 
+        if (isDone) {
+          currentController = null
+          setProcessing(false)
+          return
+        }
+
         if (data.content) {
-          // console.log(data.content)
           emit('addToLastMessage', data.content)
         }
         if (data.audio) {
@@ -152,41 +172,75 @@ async function handleSend(event, audio_msg) {
         }
       },
       onerror(err) {
-        // isProcessing = false
+        console.log(err)
+      },
+      onclose() {
+        if (curId === processId) {
+          currentController = null
+          setProcessing(false)
+        }
       },
     })
   } catch (err) {
-    console.log(err)
-    // isProcessing = false
+    if (err?.name !== 'AbortError') {
+      console.log(err)
+    }
+  } finally {
+    if (curId === processId) {
+      currentController = null
+      setProcessing(false)
+    }
   }
 }
 
 function close() {
-  ++processId
+  stopCurrentRequest(true)
   showMic.value = false
-  stopAudio()
 }
 
 function handleStop() {
-  ++processId
-  stopAudio()
+  stopCurrentRequest(true)
+}
+
+function interrupt() {
+  stopCurrentRequest(true)
+}
+
+function handleMicClick() {
+  if (isProcessing.value) {
+    interrupt()
+  }
+  showMic.value = true
 }
 
 defineExpose({
   focus,
   close,
+  interrupt,
 })
 </script>
 
 <template>
-  <form v-if="!showMic" @submit.prevent="handleSend" class="absolute bottom-4 left-2 h-12 w-86 flex  items-center">
-    <input ref="input-ref" v-model="message"
-           class="input bg-black/30 backdrop-blur-sm text-white text-base w-full h-full rounded-2xl pr-20" type="text"
-           placeholder="请输入信息。。。">
-    <div @click="handleSend" class="absolute right-2 w-8 h-8 flex justify-center items-center cursor-pointer">
+  <form v-if="!showMic" @submit.prevent="handleSend" class="absolute bottom-4 left-2 flex h-12 w-86 items-center">
+    <input
+      ref="input-ref"
+      v-model="message"
+      class="input h-full w-full rounded-2xl bg-black/30 pr-20 text-base text-white backdrop-blur-sm"
+      type="text"
+      placeholder="请输入信息..."
+    />
+    <div
+      @click="handleSend"
+      class="absolute right-2 flex h-8 w-8 items-center justify-center"
+      :class="isProcessing ? 'cursor-pointer opacity-85' : 'cursor-pointer'"
+    >
       <SendIcon/>
     </div>
-    <div @click="showMic = true" class="absolute right-10 w-8 h-8 flex justify-center items-center cursor-pointer">
+    <div
+      @click="handleMicClick"
+      class="absolute right-10 flex h-8 w-8 items-center justify-center"
+      :class="isProcessing ? 'cursor-pointer opacity-85' : 'cursor-pointer'"
+    >
       <MicIcon/>
     </div>
   </form>

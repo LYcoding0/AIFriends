@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import base64
 import json
 import os
@@ -7,16 +7,18 @@ import uuid
 from queue import Queue
 
 import websockets
+from django.core.cache import cache
 from django.http import StreamingHttpResponse
-from langchain_core.messages import HumanMessage, BaseMessageChunk, SystemMessage, AIMessage
-from rest_framework.renderers import BaseRenderer
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from langchain_core.messages import AIMessage, BaseMessageChunk, HumanMessage, SystemMessage
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import BaseRenderer
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from web.models.friend import Friend, Message, SystemPrompt
 from web.views.friend.message.chat.graph import ChatGraph
 from web.views.friend.message.memory.update import update_memory
+from web.views.friend.message.request_state import get_active_request_cache_key
 
 
 class SSERenderer(BaseRenderer):
@@ -34,7 +36,7 @@ def add_system_prompt(state, friend):
     for sp in system_prompts:
         prompt += sp.prompt
     prompt += f'\n【角色性格】\n{friend.character.profile}\n'
-    prompt += f'【长期记忆】\n{friend.memory}\n'
+    prompt += f'【长期记忆】\n{friend.memory or ""}\n'
     return {'messages': [SystemMessage(prompt)] + msgs}
 
 
@@ -63,9 +65,11 @@ class MessageChatView(APIView):
         friends = Friend.objects.filter(pk=friend_id, me__user=request.user)
         if not friends.exists():
             return Response({
-                'result': '好友不存在'
+                'result': '对话不存在'
             })
         friend = friends.first()
+        request_token = uuid.uuid4().hex
+        cache.set(get_active_request_cache_key(friend.id), request_token, timeout=3600)
         app = ChatGraph.create_app()
 
         inputs = {
@@ -75,7 +79,7 @@ class MessageChatView(APIView):
         inputs = add_recent_messages(inputs, friend)
 
         response = StreamingHttpResponse(
-            self.event_stream(app, inputs, friend, message),
+            self.event_stream(app, inputs, friend, message, request_token),
             content_type='text/event-stream',
         )
         response['Cache-Control'] = 'no-cache'
@@ -83,18 +87,18 @@ class MessageChatView(APIView):
         return response
 
     async def tts_sender(self, app, inputs, mq, ws, task_id):
-        async for msg, metadata in app.astream(inputs, stream_mode="messages"):
+        async for msg, metadata in app.astream(inputs, stream_mode='messages'):
             if isinstance(msg, BaseMessageChunk):
                 if msg.content:
                     await ws.send(json.dumps({
-                        "header": {
-                            "action": "continue-task",
-                            "task_id": task_id,  # 随机uuid
-                            "streaming": "duplex"
+                        'header': {
+                            'action': 'continue-task',
+                            'task_id': task_id,
+                            'streaming': 'duplex'
                         },
-                        "payload": {
-                            "input": {
-                                "text": msg.content,
+                        'payload': {
+                            'input': {
+                                'text': msg.content,
                             }
                         }
                     }))
@@ -102,13 +106,13 @@ class MessageChatView(APIView):
                 if hasattr(msg, 'usage_metadata') and msg.usage_metadata:
                     mq.put_nowait({'usage': msg.usage_metadata})
         await ws.send(json.dumps({
-            "header": {
-                "action": "finish-task",
-                "task_id": task_id,
-                "streaming": "duplex"
+            'header': {
+                'action': 'finish-task',
+                'task_id': task_id,
+                'streaming': 'duplex'
             },
-            "payload": {
-                "input": {}  # input不能省去，否则会报错
+            'payload': {
+                'input': {}
             }
         }))
 
@@ -128,31 +132,30 @@ class MessageChatView(APIView):
         api_key = os.getenv('API_KEY')
         wss_url = os.getenv('WSS_URL')
         headers = {
-            "Authorization": f"Bearer {api_key}"
+            'Authorization': f'Bearer {api_key}'
         }
         async with websockets.connect(wss_url, additional_headers=headers) as ws:
             await ws.send(json.dumps({
-                "header": {
-                    "action": "run-task",
-                    "task_id": task_id,  # 随机uuid
-                    "streaming": "duplex"
+                'header': {
+                    'action': 'run-task',
+                    'task_id': task_id,
+                    'streaming': 'duplex'
                 },
-                "payload": {
-                    "task_group": "audio",
-                    "task": "tts",
-                    "function": "SpeechSynthesizer",
-                    "model": "cosyvoice-v3-flash",
-                    "parameters": {
-                        "text_type": "PlainText",
-                        "voice": voice_id,  # 音色
-                        "format": "mp3",  # 音频格式
-                        "sample_rate": 22050,  # 采样率
-                        "volume": 50,  # 音量
-                        "rate": 1.25,  # 语速
-                        "pitch": 1  # 音调
+                'payload': {
+                    'task_group': 'audio',
+                    'task': 'tts',
+                    'function': 'SpeechSynthesizer',
+                    'model': 'cosyvoice-v3-flash',
+                    'parameters': {
+                        'text_type': 'PlainText',
+                        'voice': voice_id,
+                        'format': 'mp3',
+                        'sample_rate': 22050,
+                        'volume': 50,
+                        'rate': 1.25,
+                        'pitch': 1
                     },
-                    "input": {  # input不能省去，不然会报错
-                    }
+                    'input': {}
                 }
             }))
             async for msg in ws:
@@ -169,10 +172,11 @@ class MessageChatView(APIView):
         finally:
             mq.put_nowait(None)
 
-    def event_stream(self, app, inputs, friend, message):
+    def event_stream(self, app, inputs, friend, message, request_token):
         mq = Queue()
         thread = threading.Thread(target=self.work, args=(app, inputs, mq, friend.character.voice.voice_id))
         thread.start()
+        cache_key = get_active_request_cache_key(friend.id)
 
         full_output = ''
         full_usage = {}
@@ -180,29 +184,43 @@ class MessageChatView(APIView):
             msg = mq.get()
             if not msg:
                 break
-            if msg.get('content', None):
+            if msg.get('content'):
                 full_output += msg['content']
-                yield f'data: {json.dumps({'content': msg['content']}, ensure_ascii=False)}\n\n'
-            if msg.get('audio', None):
-                yield f'data: {json.dumps({'audio': msg['audio']}, ensure_ascii=False)}\n\n'
-            if msg.get('usage', None):
+                yield f"data: {json.dumps({'content': msg['content']}, ensure_ascii=False)}\n\n"
+            if msg.get('audio'):
+                yield f"data: {json.dumps({'audio': msg['audio']}, ensure_ascii=False)}\n\n"
+            if msg.get('usage'):
                 full_usage = msg['usage']
 
-        yield 'data: [DONE]\n\n'
+        if cache.get(cache_key) != request_token:
+            yield 'data: [DONE]\n\n'
+            return
+
         input_tokens = full_usage.get('input_tokens', 0)
         output_tokens = full_usage.get('output_tokens', 0)
         total_tokens = full_usage.get('total_tokens', 0)
-        Message.objects.create(
-            friend=friend,
-            user_message=message[:500],
-            input=json.dumps(
-                [m.model_dump() for m in inputs['messages']],
-                ensure_ascii=False,
-            )[:10000],
-            output=full_output[:500],
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            total_tokens=total_tokens,
-        )
-        if Message.objects.filter(friend=friend).count() % 1 == 0:
+        try:
+            Message.objects.create(
+                friend=friend,
+                user_message=message[:500],
+                input=json.dumps(
+                    [m.model_dump() for m in inputs['messages']],
+                    ensure_ascii=False,
+                )[:10000],
+                output=full_output[:500],
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                total_tokens=total_tokens,
+            )
+        except Exception as err:
+            print(err)
+
+        yield 'data: [DONE]\n\n'
+
+        if cache.get(cache_key) != request_token:
+            return
+
+        try:
             update_memory(friend)
+        except Exception as err:
+            print(err)
