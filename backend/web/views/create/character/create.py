@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -36,7 +37,15 @@ class CreateCharacterView(APIView):
                     'result': '请上传角色背景图片'
                 })
 
-            voice = Voice.objects.get(id=voice_id)
+            voice = Voice.objects.filter(
+                id=voice_id
+            ).filter(
+                Q(owner=request.user) | Q(owner__isnull=True)
+            ).first()
+            if not voice:
+                return Response({
+                    'result': '音色不存在或无权限'
+                })
 
             Character.objects.create(
                 author=user_profile,
@@ -49,7 +58,7 @@ class CreateCharacterView(APIView):
             return Response({
                 'result': 'success'
             })
-        except:
+        except Exception:
             return Response({
                 'result': '系统异常，请稍后重试'
             })

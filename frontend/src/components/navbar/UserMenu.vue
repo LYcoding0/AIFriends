@@ -3,6 +3,7 @@ import {useUserStore} from "@/stores/user.js";
 import UserSpaceIcon from "@/components/navbar/icons/UserSpaceIcon.vue";
 import UserLogoutIcon from "@/components/navbar/icons/UserLogoutIcon.vue";
 import UserProfileIcon from "@/components/navbar/icons/UserProfileIcon.vue";
+import VoiceIcon from "@/components/navbar/icons/VoiceIcon.vue";
 import {useRouter} from "vue-router";
 import api from "@/js/http/api.js";
 
@@ -27,6 +28,7 @@ async function handleLogout() {
     console.log(err)
   }
 }
+
 </script>
 
 <template>
@@ -60,7 +62,13 @@ async function handleLogout() {
           编辑资料
         </RouterLink>
       </li>
-      <li></li>
+      <li>
+        <RouterLink @click="closeMenu" :to="{name: 'user-voice-studio-index'}" class="rounded-2xl py-3 text-sm font-bold text-slate-700 hover:bg-slate-100/90">
+          <VoiceIcon/>
+          创建音色
+        </RouterLink>
+        <hr class="mx-4 rounded-none">
+      </li>
       <li>
         <a @click="handleLogout" class="rounded-2xl py-3 text-sm font-bold text-slate-700 hover:bg-slate-100/90">
           <UserLogoutIcon/>
@@ -68,6 +76,7 @@ async function handleLogout() {
         </a>
       </li>
     </ul>
+
   </div>
 </template>
 

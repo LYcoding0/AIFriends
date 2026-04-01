@@ -3,19 +3,19 @@ import Photo from "@/views/create/character/components/Photo.vue";
 import Name from "@/views/create/character/components/Name.vue";
 import Profile from "@/views/create/character/components/Profile.vue";
 import BackgroundImage from "@/views/create/character/components/BackgroundImage.vue";
-import {onMounted, ref, useTemplateRef} from "vue";
+import {computed, onMounted, ref, useTemplateRef, watch} from "vue";
 import {base64ToFile} from "@/js/utils/base64_to_file.js";
 import {useUserStore} from "@/stores/user.js";
 import {useRoute, useRouter} from "vue-router";
 import api from "@/js/http/api.js";
-import Voice from "@/views/create/character/components/Voice.vue";
+import VoiceSelect from "@/views/create/character/components/VoiceSelect.vue";
+import CustomVoiceManager from "@/views/create/character/components/CustomVoiceManager.vue";
 
 const user = useUserStore()
 const route = useRoute()
 const router = useRouter()
 const photoRef = useTemplateRef('photo-ref')
 const nameRef = useTemplateRef('name-ref')
-const voiceRef = useTemplateRef('voice-ref')
 const profileRef = useTemplateRef('profile-ref')
 const backgroundImageRef = useTemplateRef('background-image-ref')
 const errorMessage = ref('')
@@ -23,7 +23,65 @@ const characterId = route.params.character_id
 const character = ref(null)
 
 const voices = ref([])
-const curVoiceId = ref(null)
+const customVoices = ref([])
+const voiceSource = ref('system')
+const systemVoiceId = ref(null)
+const customVoiceId = ref(null)
+const loadingCustomVoices = ref(false)
+
+const systemVoices = computed(() => {
+  return (voices.value || []).filter(v => !v.is_custom)
+})
+
+const selectedVoiceId = computed(() => {
+  if (voiceSource.value === 'custom') {
+    return customVoiceId.value != null ? String(customVoiceId.value) : ''
+  }
+  return systemVoiceId.value != null ? String(systemVoiceId.value) : ''
+})
+
+function handleSelectSystemVoice(next) {
+  if (next == null || String(next) === '') return
+  systemVoiceId.value = String(next)
+  customVoiceId.value = null
+  voiceSource.value = 'system'
+}
+
+async function loadVoices(preferVoiceId = null) {
+  const res = await api.get('/api/create/character/voice/get_list/', {})
+  const data = res.data
+  if (data.result !== 'success') {
+    errorMessage.value = data.result
+    return
+  }
+
+  voices.value = data.voices || []
+  const currentSystemId = systemVoiceId.value != null ? String(systemVoiceId.value) : null
+  const firstSystem = systemVoices.value?.[0]?.id || null
+
+  if (currentSystemId && systemVoices.value.some(v => String(v.id) === currentSystemId)) {
+    return
+  }
+  systemVoiceId.value = firstSystem
+}
+
+async function loadCustomVoices() {
+  loadingCustomVoices.value = true
+  try {
+    const res = await api.get('/api/create/character/voice/custom/list/', {})
+    const data = res.data
+    if (data.result === 'success') {
+      customVoices.value = data.voices || []
+    } else {
+      errorMessage.value = data.result
+    }
+  } catch (err) {
+    console.log(err)
+    errorMessage.value = err?.response?.data?.result || '网络异常，请稍后重试'
+  } finally {
+    loadingCustomVoices.value = false
+  }
+}
 
 onMounted(async () => {
   try {
@@ -36,7 +94,16 @@ onMounted(async () => {
     if (data.result === 'success') {
       character.value = data.character
       voices.value = data.voices
-      curVoiceId.value = data.character.voice_id || data.voices?.[0]?.id || null
+      const currentId = data.character.voice_id != null ? String(data.character.voice_id) : null
+      const currentVoice = (data.voices || []).find(v => String(v.id) === currentId) || null
+      if (currentVoice?.is_custom) {
+        customVoiceId.value = currentId
+        voiceSource.value = 'custom'
+      } else {
+        systemVoiceId.value = currentId || systemVoices.value?.[0]?.id || null
+        voiceSource.value = 'system'
+      }
+      await loadCustomVoices()
     } else {
       errorMessage.value = data.result
     }
@@ -46,10 +113,36 @@ onMounted(async () => {
   }
 })
 
+function handleSelectVoice(payload) {
+  const voiceId = payload?.voice_id
+  if (!voiceId) return
+  customVoiceId.value = String(voiceId)
+  voiceSource.value = 'custom'
+}
+
+function handleSelectVoiceSource(next) {
+  if (next !== 'system' && next !== 'custom') return
+  voiceSource.value = next
+  if (next === 'system') {
+    customVoiceId.value = null
+    if (!systemVoiceId.value) {
+      systemVoiceId.value = systemVoices.value?.[0]?.id || null
+    }
+    return
+  }
+  if (!customVoiceId.value && customVoices.value?.length) {
+    customVoiceId.value = String(customVoices.value[0].id)
+  }
+}
+
+async function handleRefreshCustomVoices() {
+  await loadCustomVoices()
+}
+
 async function handleUpdate() {
   const photo = photoRef.value.myPhoto
   const name = nameRef.value.myName?.trim()
-  const voice = `${voiceRef.value.myVoice ?? ''}`.trim()
+  const voice = `${selectedVoiceId.value ?? ''}`.trim()
   const profile = profileRef.value.myProfile?.trim()
   const backgroundImage = backgroundImageRef.value.myBackgroundImage
 
@@ -108,7 +201,39 @@ async function handleUpdate() {
         <h3 class="editor-title text-lg my-4">更新角色</h3>
         <Photo ref="photo-ref" :photo="character.photo"/>
         <Name ref="name-ref" :name="character.name"/>
-        <Voice ref="voice-ref" :voices="voices" :curVoiceId="curVoiceId"/>
+        <div class="voice-source-head">
+          <button
+              type="button"
+              class="voice-source-tab"
+              :class="{'voice-source-tab-active': voiceSource === 'system'}"
+              @click="handleSelectVoiceSource('system')"
+          >系统音色</button>
+          <button
+              type="button"
+              class="voice-source-tab"
+              :class="{'voice-source-tab-active': voiceSource === 'custom'}"
+              @click="handleSelectVoiceSource('custom')"
+          >自定义音色</button>
+        </div>
+
+        <div v-if="voiceSource === 'system'" class="system-voice-block">
+          <VoiceSelect
+              :voices="systemVoices"
+              v-model="systemVoiceId"
+              placeholder="请选择系统音色"
+              searchPlaceholder="搜索系统音色"
+              @update:modelValue="handleSelectSystemVoice"
+          />
+        </div>
+        <div v-else class="custom-voice-block">
+          <CustomVoiceManager
+              :customVoices="customVoices"
+              :curVoiceId="customVoiceId"
+              :loadingCustomVoices="loadingCustomVoices"
+              @select-voice="handleSelectVoice"
+              @refresh-custom-voices="handleRefreshCustomVoices"
+          />
+        </div>
         <Profile ref="profile-ref" :profile="character.profile"/>
         <BackgroundImage ref="background-image-ref" :backgroundImage="character.background_image"/>
 
@@ -123,5 +248,37 @@ async function handleUpdate() {
 </template>
 
 <style scoped>
+.voice-source-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.65rem;
+}
 
+.voice-source-tab {
+  border: 1px solid rgba(214, 202, 186, 0.96);
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+  font-weight: 800;
+  color: #63594e;
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+}
+
+.voice-source-tab-active {
+  border-color: rgba(194, 167, 133, 0.96);
+  background: rgba(245, 235, 223, 0.92);
+  color: #0f172a;
+  box-shadow:
+    0 0 0 3px rgba(222, 197, 164, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+:deep(.system-voice-block .editor-fieldset > .editor-label) {
+  display: none;
+}
+
+:deep(.custom-voice-block .editor-fieldset > .editor-label) {
+  display: none;
+}
 </style>

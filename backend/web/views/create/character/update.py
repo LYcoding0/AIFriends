@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils.timezone import now
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -42,10 +43,12 @@ class UpdateCharacterView(APIView):
                     'result': '角色不存在或无权限'
                 })
 
-            voice = Voice.objects.filter(id=voice_id).first()
+            voice = Voice.objects.filter(id=voice_id).filter(
+                Q(owner=request.user) | Q(owner__isnull=True)
+            ).first()
             if not voice:
                 return Response({
-                    'result': '音色不存在'
+                    'result': '音色不存在或无权限'
                 })
 
             if photo:

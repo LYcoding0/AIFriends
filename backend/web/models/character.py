@@ -2,6 +2,7 @@ import uuid
 
 from django.db import models
 from django.utils.timezone import now, localtime
+from django.contrib.auth.models import User
 
 from web.models.user import UserProfile
 
@@ -21,10 +22,18 @@ def background_image_upload_to(instance, filename):
 class Voice(models.Model):
     name = models.CharField(max_length=100)
     voice_id = models.CharField(max_length=100)
+    owner = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
+    is_custom = models.BooleanField(default=False)
     create_time = models.DateTimeField(default=now)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['owner', 'voice_id'], name='uniq_voice_per_owner_and_voice_id')
+        ]
+
     def __str__(self):
-        return f"{self.name} - {self.voice_id} - {localtime(self.create_time).strftime('%Y-%m-%d %H:%M:%S')}"
+        owner = self.owner.username if self.owner else 'system'
+        return f"{owner} - {self.name} - {self.voice_id} - {localtime(self.create_time).strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 class Character(models.Model):

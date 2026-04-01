@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -17,12 +18,16 @@ class GetSingleCharacterView(APIView):
                     'result': '角色不存在或无权限'
                 })
 
-            voices_raw = Voice.objects.order_by('id')
+            voices_raw = Voice.objects.filter(
+                Q(owner=request.user) | Q(owner__isnull=True)
+            ).order_by('id')
             voices = []
             for v in voices_raw:
                 voices.append({
                     'id': v.id,
                     'name': v.name,
+                    'is_custom': v.is_custom,
+                    'can_delete': v.is_custom and v.owner_id == request.user.id,
                 })
 
             return Response({

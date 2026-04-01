@@ -7,6 +7,7 @@ import LoginIndex from "@/views/user/account/LoginIndex.vue";
 import RegisterIndex from "@/views/user/account/RegisterIndex.vue";
 import SpaceIndex from "@/views/user/space/SpaceIndex.vue";
 import ProfileIndex from "@/views/user/profile/ProfileIndex.vue";
+import VoiceStudioIndex from "@/views/user/voice/VoiceStudioIndex.vue";
 import {useUserStore} from "@/stores/user.js";
 import UpdateCharacter from "@/views/create/character/UpdateCharacter.vue";
 
@@ -82,6 +83,14 @@ const router = createRouter({
             path: '/user/profile',
             name: 'user-profile-index',
             component: ProfileIndex,
+            meta: {
+                needLogin: true
+            }
+        },
+        {
+            path: '/user/voice',
+            name: 'user-voice-studio-index',
+            component: VoiceStudioIndex,
             meta: {
                 needLogin: true
             }
