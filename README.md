@@ -35,7 +35,8 @@
 - 删除角色
 - 角色头像上传
 - 角色聊天背景上传
-- 角色音色选择
+- 系统音色 / 自定义音色选择
+- 音色搜索与下拉选择
 - 角色列表展示
 
 ### 1.3 对话系统
@@ -43,6 +44,8 @@
 - 与 AI 角色建立会话
 - 流式返回聊天结果（SSE）
 - 显示历史消息
+- 清空历史消息
+- 中断正在生成的回复
 - 记录 token 消耗
 - 长期记忆更新
 
@@ -55,7 +58,15 @@
 - TTS 文字转语音
 - 按角色音色播放语音
 
-### 1.5 知识库能力
+### 1.5 自定义音色
+
+- 在 `/user/voice` 独立管理
+- 创建、刷新和删除用户私有音色
+- 自定义音色名支持中文
+- 远端 prefix 由后端自动生成
+- 删除前检查角色引用，避免产生失效关联
+
+### 1.6 知识库能力
 
 - 读取本地文档
 - 文本切分
@@ -190,8 +201,11 @@ AIFriends/
 ### 5.2 角色
 
 - `Voice`
-  - 音色名称
-  - 第三方音色 ID
+  - `name`：音色展示名称
+  - `voice_id`：第三方远端音色 ID
+  - `owner`：为空时是公共系统音色，非空时是用户私有音色
+  - `is_custom`：是否为自定义音色
+  - 唯一约束：`(owner, voice_id)`
 
 - `Character`
   - 作者
@@ -263,6 +277,7 @@ VOICE_URL="https://your-voice-customization-endpoint"
 
 - `VOICE_URL`
   - 自定义音色管理接口地址
+  - 创建自定义音色时，后端会自动生成不超过 10 位的字母数字 prefix
 
 ### 7.2 安全建议
 
@@ -384,7 +399,7 @@ const platform = 'vue'
 项目能启动，不代表核心功能一定能直接用。
 第一次运行通常还需要补几类业务数据。
 
-## 10.1 添加音色
+## 10.1 添加系统音色
 
 角色创建与更新依赖 `Voice` 表。
 
@@ -398,6 +413,10 @@ const platform = 'vue'
 - `Voice`
   - `name`：显示名称
   - `voice_id`：第三方平台返回的音色 ID
+
+系统音色的 `owner` 应为空，且 `is_custom` 应为 `false`。
+
+用户也可以在 `/user/voice` 创建和管理自己的自定义音色。自定义音色只对所属用户可见；删除前需要先确认没有角色仍在引用该音色。
 
 ## 10.2 添加系统提示词
 
@@ -469,6 +488,9 @@ insert_documents()
 - `/user/profile`
   - 编辑个人资料
 
+- `/user/voice`
+  - 自定义音色管理页
+
 ## 12. API 概览
 
 后端路由位于：
@@ -492,6 +514,9 @@ insert_documents()
 - `GET /api/create/character/get_single/`
 - `GET /api/create/character/get_list/`
 - `GET /api/create/character/voice/get_list/`
+- `POST /api/create/character/voice/custom/create/`
+- `GET /api/create/character/voice/custom/list/`
+- `POST /api/create/character/voice/custom/delete/`
 - `GET /api/homepage/index/`
 
 ### 12.3 会话相关
@@ -501,6 +526,8 @@ insert_documents()
 - `GET /api/friend/get_list/`
 - `POST /api/friend/message/chat/`
 - `GET /api/friend/message/get_history/`
+- `POST /api/friend/message/clear_history/`
+- `POST /api/friend/message/interrupt/`
 - `POST /api/friend/message/asr/asr/`
 
 ## 13. 前端打包与 Django 集成
@@ -583,6 +610,8 @@ npm run build
 
 检查 Django Admin 中 `Voice` 表是否有数据。
 
+系统音色下拉只展示 `is_custom = false` 的记录；用户自定义音色需要在 `/user/voice` 创建，并在角色页面切换到“自定义音色”后选择。
+
 ### 15.3 语音输入无法工作
 
 检查以下几项：
@@ -616,6 +645,18 @@ npm run build
 - 是否通过 `cmd /c npm run build` 执行
 - 是否有安全软件拦截
 - 是否存在受限目录权限
+
+### 15.7 创建自定义音色失败
+
+优先检查：
+
+- `VOICE_URL` / `API_KEY` 是否正确
+- 远端接口是否返回了有效的音色 ID
+- 远端服务是否接受后端自动生成的 prefix
+
+### 15.8 删除自定义音色失败
+
+通常表示该音色仍被某个角色引用。先在相关角色中切换音色，再重新删除；后端也会避免删除仍有共享引用的远端音色。
 
 ## 16. 当前代码里值得注意的点
 
